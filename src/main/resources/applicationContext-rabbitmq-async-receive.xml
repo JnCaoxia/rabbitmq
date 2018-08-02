@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
+        <property name="ignoreResourceNotFound" value="true" />
+        <property name="locations">
+            <list>
+                <!-- 标准配置 -->
+                <value>classpath*:/application-async.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 创建connectionFactory -->
+    <bean id="rabbitConnectionFactory"
+          class="org.springframework.amqp.rabbit.connection.CachingConnectionFactory">
+        <constructor-arg value="${rabbit.hosts}"/>
+        <property name="username" value="${rabbit.username}"/>
+        <property name="password" value="${rabbit.password}"/>
+        <property name="virtualHost" value="${rabbit.virtualHost}"/>
+        <property name="channelCacheSize" value="5"/>
+    </bean>
+
+    <!-- 声明消息转换器为SimpleMessageConverter -->
+    <bean id="messageConverter"
+          class="org.springframework.amqp.support.converter.SimpleMessageConverter">
+    </bean>
+
+    <!-- 监听生产者发送的消息开始 -->
+    <!-- 用于接收消息的处理类 -->
+    <bean id="receiveHandler"
+          class="com.caox.rabbitmq.demo._09_spring_rabbitmq_async_xml.ReceiveMsgHandler">
+    </bean>
+    <!-- 用于消息的监听的代理类MessageListenerAdapter -->
+    <bean id="receiveListenerAdapter"
+          class="org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter">
+        <constructor-arg ref="receiveHandler" />
+        <property name="defaultListenerMethod" value="handleMessage"></property>
+        <property name="messageConverter" ref="messageConverter"></property>
+    </bean>
+    <!-- 用于消息的监听的容器类SimpleMessageListenerContainer，对于queueName的值一定要与定义的Queue的值相同 -->
+    <bean id="listenerContainer"
+          class="org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer">
+        <property name="queueNames" value="${rabbit.queue}"></property>
+        <property name="connectionFactory" ref="rabbitConnectionFactory"></property>
+        <property name="messageListener" ref="receiveListenerAdapter"></property>
+    </bean>
+    <!-- 监听生产者发送的消息结束 -->
+
+</beans>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+                http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+                http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/rabbit
+                http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd">
+
+    <!-- 连接服务配置  -->
+    <rabbit:connection-factory id="connectionFactory" host="127.0.0.1" username="caoxia"
+                               password="caoxia123456" port="5672" virtual-host="/"  channel-cache-size="5" />
+
+    <rabbit:admin connection-factory="connectionFactory"/>
+
+    <!-- queue 队列声明-->
+    <rabbit:queue durable="true" auto-delete="false" exclusive="false" name="spring.queue.tag"/>
+
+
+    <!-- exchange queue binging key 绑定 -->
+    <rabbit:direct-exchange name="spring.queue.exchange" durable="true" auto-delete="false">
+        <rabbit:bindings>
+            <rabbit:binding queue="spring.queue.tag" key="spring.queue.tag.key"/>
+        </rabbit:bindings>
+    </rabbit:direct-exchange>
+
+    <bean id="receiveMessageListener"
+          class="com.caox.rabbitmq.demo._13_spring_rabbitmq_label_xml.ReceiveMessageListener" />
+
+    <!-- queue litener  观察 监听模式 当有消息到达时会通知监听在对应的队列上的监听对象-->
+    <rabbit:listener-container connection-factory="connectionFactory" acknowledge="auto" >
+        <rabbit:listener queues="spring.queue.tag" ref="receiveMessageListener" />
+    </rabbit:listener-container>
+
+    <!--&lt;!&ndash; spring template声明 &ndash;&gt;-->
+    <!--<rabbit:template id="amqpTemplate" exchange="spring.queue.exchange"  routing-key="spring.queue.tag.key"-->
+                     <!--connection-factory="connectionFactory" message-converter="jsonMessageConverter" />-->
+
+    <!--<bean id="jsonMessageConverter"-->
+          <!--class="com.caox.rabbitmq.demo._13_spring_rabbitmq_label_xml.Gson2JsonMessageConverter" />-->
+</beans>

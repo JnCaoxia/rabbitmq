@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+                http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+                http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/rabbit
+                http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd">
+
+    <!-- 连接服务配置 -->
+    <rabbit:connection-factory id="connectionFactory"
+                               host="127.0.0.1" username="caoxia" password="caoxia123456" port="5672"
+                               virtual-host="/" channel-cache-size="5" />
+
+    <rabbit:admin connection-factory="connectionFactory" />
+
+    <!-- queue 队列声明 -->
+    <rabbit:queue  durable="true"
+                   auto-delete="false" exclusive="false" name="spring.queue.tag" />
+
+    <!-- 转发器类型标签：rabbit:fanout-exchange、rabbit:direct-exchange、rabbit:topic-exchange、rabbit:headers-exchange-->
+    <!-- exchange queue binging key 绑定 -->
+    <rabbit:direct-exchange name="spring.queue.exchange"
+                            durable="true" auto-delete="false">
+        <rabbit:bindings>
+            <rabbit:binding queue="spring.queue.tag" key="spring.queue.tag.key" />
+        </rabbit:bindings>
+    </rabbit:direct-exchange>
+
+    <!-- spring amqp默认的是jackson 的一个插件,目的将生产者生产的数据转换为json存入消息队列，由于Gson的速度快于jackson,这里替换为Gson的一个实现 -->
+    <bean id="jsonMessageConverter"
+          class="com.caox.rabbitmq.demo._13_spring_rabbitmq_label_xml.Gson2JsonMessageConverter" />
+
+    <!-- spring template声明 -->
+    <rabbit:template id="amqpTemplate" exchange="spring.queue.exchange"  routing-key="spring.queue.tag.key"
+                     connection-factory="connectionFactory" message-converter="jsonMessageConverter" />
+
+    <!-- 创建rabbitTemplate 消息模板类 -->
+    <!--<bean id="rabbitTemplate"-->
+          <!--class="org.springframework.amqp.rabbit.core.RabbitTemplate">-->
+        <!--<constructor-arg ref="connectionFactory"></constructor-arg>-->
+        <!--<property name="queue" value="spring.queue.tag"></property>-->
+        <!--<property name="routingKey" value="spring.queue.tag.key"></property>-->
+    <!--</bean>-->
+</beans>

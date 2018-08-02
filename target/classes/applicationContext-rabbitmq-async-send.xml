@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
+        <property name="ignoreResourceNotFound" value="true" />
+        <property name="locations">
+            <list>
+                <!-- 标准配置 -->
+                <value>classpath*:/application-async.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 创建connectionFactory -->
+    <bean id="rabbitConnectionFactory"
+          class="org.springframework.amqp.rabbit.connection.CachingConnectionFactory">
+        <constructor-arg value="${rabbit.hosts}"/>
+        <property name="username" value="${rabbit.username}"/>
+        <property name="password" value="${rabbit.password}"/>
+        <property name="virtualHost" value="${rabbit.virtualHost}"/>
+        <property name="channelCacheSize" value="5"/>
+    </bean>
+
+    <!-- 创建rabbitAdmin 代理类 -->
+    <bean id="rabbitAdmin"
+          class="org.springframework.amqp.rabbit.core.RabbitAdmin">
+        <constructor-arg ref="rabbitConnectionFactory" />
+    </bean>
+
+    <!-- 创建rabbitTemplate 消息模板类
+     -->
+    <bean id="rabbitTemplate"
+          class="org.springframework.amqp.rabbit.core.RabbitTemplate">
+        <constructor-arg ref="rabbitConnectionFactory"></constructor-arg>
+        <property name="routingKey" value="${rabbit.routingKey}"></property>
+    </bean>
+</beans>

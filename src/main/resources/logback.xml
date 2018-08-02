@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <conversionRule conversionWord="tracelogid" converterClass="com.system.ext.logback.converter.TraceLogIdConverter"/>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder charset="utf-8"> <!-- encoder 可以指定字符集，对于中文输出有意义 -->
+            <!-- %.-1level 只显示信息级别的首字母,%-5level 左对齐显示信息级别全称 -->
+            <!-- 如需自定义关键字，用 %mdc{键名} 表示,程序中用MDC.put("键名","键值")设置，可动态设置 [%logger:%line]-->
+            <Pattern>[%date{yyyy-MM-dd HH:mm:ss}] [%-5level]  [%tracelogid] %logger %line --%mdc{client} %msg%n</Pattern>
+        </encoder>
+    </appender>
+    <appender name="logfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>/log/baofoo4/admin/admin</File>
+        <encoder>
+            <Pattern>[%date] [%-5level]  [%tracelogid] %logger %line --%mdc{client} %msg%n</Pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/log/baofoo4/admin/admin-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>1024MB</maxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date %level [%thread]  [%tracelogid] %logger{10} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.mybatis" level="INFO"/>
+    <logger name="java.sql" level="INFO"/>
+
+    <logger name="org.apache" level="INFO"/>
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="com.alibaba" level="WARN"/>
+    <logger name="org.dozer" level="INFO"/>
+    <logger name="com.mchange.v2.resourcepool" level="INFO"/>
+
+    <logger name="com.baofoo" level="INFO">
+        <appender-ref ref="logfile"/>
+    </logger>
+
+    <!-- 输出到控制台和文件，可定义更多的 Appender -->
+    <root name="com.baofoo" level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
